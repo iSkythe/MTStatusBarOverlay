@@ -46,7 +46,8 @@ typedef enum MTDetailViewMode {
 typedef enum MTMessageType {
 	MTMessageTypeActivity,				// shows actvity indicator
 	MTMessageTypeFinish,				// shows checkmark
-	MTMessageTypeError					// shows error-mark
+	MTMessageTypeError,					// shows error-mark
+    MTMessageTypePlain                  // doesn't show anything special
 } MTMessageType;
 
 
@@ -56,6 +57,8 @@ typedef enum MTMessageType {
 #define kMTStatusBarOverlayDurationKey			@"MessageDuration"
 #define kMTStatusBarOverlayAnimationKey			@"MessageAnimation"
 #define kMTStatusBarOverlayImmediateKey			@"MessageImmediate"
+#define kMTStatusBarOverlayKeyKey               @"MessageKey"
+#define kSetProgressOnStatusBarKey              @"UniqueProgressLabelSetProgressKey"
 
 // keys used for saving state to NSUserDefaults
 #define kMTStatusBarOverlayStateShrinked        @"kMTStatusBarOverlayStateShrinked"
@@ -78,14 +81,16 @@ typedef enum MTMessageType {
  a detail-view that shows additional information. You can show a history of all the previous
  messages for free by setting historyEnabled to YES
  */
-@interface MTStatusBarOverlay : UIWindow <UITableViewDataSource> 
+@interface MTStatusBarOverlay : UIWindow <UITableViewDataSource, UITableViewDelegate> 
 
 // the view that holds all the components of the overlay (except for the detailView)
 @property (nonatomic, strong) UIView *backgroundView;
 // the detailView is shown when animation is set to "FallDown"
 @property (nonatomic, strong) UIView *detailView;
-// the current progress
-@property (nonatomic, assign) double progress;
+// progress displayed on MTStatusBarOverlay
+@property (nonatomic, assign) double mainProgress;
+// dictionary which holds all progress
+@property (nonatomic, strong) NSMutableDictionary *progressDictionary;
 // the frame of the status bar when animation is set to "Shrink" and it is shrinked
 @property (nonatomic, assign) CGRect smallFrame;
 // the current active animation
@@ -140,26 +145,34 @@ typedef enum MTMessageType {
 - (void)postMessageDictionary:(NSDictionary *)messageDictionary;
 
 // shows an activity indicator and the given message
-- (void)postMessage:(NSString *)message;
-- (void)postMessage:(NSString *)message duration:(NSTimeInterval)duration;
-- (void)postMessage:(NSString *)message duration:(NSTimeInterval)duration animated:(BOOL)animated;
-- (void)postMessage:(NSString *)message animated:(BOOL)animated;
+- (void)postMessage:(NSString *)message key:(NSString *)key;
+- (void)postMessage:(NSString *)message key:(NSString *)key duration:(NSTimeInterval)duration;
+- (void)postMessage:(NSString *)message key:(NSString *)key duration:(NSTimeInterval)duration animated:(BOOL)animated;
+- (void)postMessage:(NSString *)message key:(NSString *)key animated:(BOOL)animated;
+
 // clears the message queue and shows this message instantly
-- (void)postImmediateMessage:(NSString *)message animated:(BOOL)animated;
-- (void)postImmediateMessage:(NSString *)message duration:(NSTimeInterval)duration;
-- (void)postImmediateMessage:(NSString *)message duration:(NSTimeInterval)duration animated:(BOOL)animated;
+- (void)postImmediateMessage:(NSString *)message key:(NSString *)key animated:(BOOL)animated;
+- (void)postImmediateMessage:(NSString *)message key:(NSString *)key duration:(NSTimeInterval)duration;
+- (void)postImmediateMessage:(NSString *)message key:(NSString *)key duration:(NSTimeInterval)duration animated:(BOOL)animated;
 
 // shows a checkmark instead of the activity indicator and hides the status bar after the specified duration
-- (void)postFinishMessage:(NSString *)message duration:(NSTimeInterval)duration;
-- (void)postFinishMessage:(NSString *)message duration:(NSTimeInterval)duration animated:(BOOL)animated;
+- (void)postFinishMessage:(NSString *)message key:(NSString *)key duration:(NSTimeInterval)duration;
+- (void)postFinishMessage:(NSString *)message key:(NSString *)key duration:(NSTimeInterval)duration animated:(BOOL)animated;
 // clears the message queue and shows this message instantly
-- (void)postImmediateFinishMessage:(NSString *)message duration:(NSTimeInterval)duration animated:(BOOL)animated;
+- (void)postImmediateFinishMessage:(NSString *)message key:(NSString *)key duration:(NSTimeInterval)duration animated:(BOOL)animated;
 
 // shows a error-sign instead of the activity indicator and hides the status bar after the specified duration
-- (void)postErrorMessage:(NSString *)message duration:(NSTimeInterval)duration;
-- (void)postErrorMessage:(NSString *)message duration:(NSTimeInterval)duration animated:(BOOL)animated;
+- (void)postErrorMessage:(NSString *)message key:(NSString *)key duration:(NSTimeInterval)duration;
+- (void)postErrorMessage:(NSString *)message key:(NSString *)key duration:(NSTimeInterval)duration animated:(BOOL)animated;
 // clears the message queue and shows this message instantly
-- (void)postImmediateErrorMessage:(NSString *)message duration:(NSTimeInterval)duration animated:(BOOL)animated;
+- (void)postImmediateErrorMessage:(NSString *)message key:(NSString *)key duration:(NSTimeInterval)duration animated:(BOOL)animated;
+
+// remove all or certain messages
+- (void)removeMessageFromHistoryForKey:(NSString *)key;
+- (void)removeAllMessages;
+
+// set progress
+- (void)setProgress:(double)progress key:(NSString *)key;
 
 // hides the status bar overlay and resets it
 - (void)hide;
